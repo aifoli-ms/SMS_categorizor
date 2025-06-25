@@ -33,6 +33,7 @@ openpyxl==3.1.5
 packaging==25.0
 pandas==2.3.0
 pillow==11.2.1
+plotly==6.1.2
 protobuf==6.31.1
 pyarrow==20.0.0
 pydeck==0.9.1
@@ -66,3 +67,4 @@ transformers==4.52.4
 typing_extensions==4.14.0
 tzdata==2025.2
 urllib3==2.5.0
+xlsxwriter==3.2.5

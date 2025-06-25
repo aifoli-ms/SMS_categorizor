@@ -51,8 +51,7 @@ misclassified_mambu_as_other = df[
 # Display the first few rows
 print(misclassified_mambu_as_other.head())
 
-# Optionally: Save to CSV
-misclassified_mambu_as_other.to_csv('mambu_misclassified_as_other.csv', index=False)
+
 
 # Define label order (use sorted list of unique labels or manually define)
 labels = sorted(df[category_column].unique())
