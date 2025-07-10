@@ -27,6 +27,7 @@ class SMSCategorizer:
                 r'security code.*\d{4,8}',
                 r'your.*code.*is.*\d{4,8}',
                 r'^\d{4,8}$',  # Standalone code
+                r'security code with Fido is:\s*\d{6}.*Do not share this code with anyone.*For internal use: R/[A-Za-z0-9]+'
             ],
             'Recovery': [
                  # High priority Recovery patterns

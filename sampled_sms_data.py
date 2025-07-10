@@ -15,7 +15,7 @@ for category in df['category'].unique():
     sampled_dfs.append(sampled_df)
 
 # Concatenate all sampled data
-sampled_data = pd.concat(sampled_dfs, ignore_index=True)
+sampled_data = pd.concat(sampled_dfs, ignore_index=True) 
 
 # Only keep the original message column (assume it's named 'message')
 if 'processed_message' in sampled_data.columns:

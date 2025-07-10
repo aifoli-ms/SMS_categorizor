@@ -114,7 +114,6 @@ if uploaded_file is not None:
         # Column selection with smart detection
         st.subheader('🎯 Column Selection')
         
-        # Try to automatically select the 'text' column (case-insensitive)
         text_col_candidates = [col for col in df.columns if 'text' in col.lower() or 'message' in col.lower() or 'sms' in col.lower()]
         
         if text_col_candidates:
@@ -140,37 +139,69 @@ if uploaded_file is not None:
             for i, msg in enumerate(sample_messages, 1):
                 st.write(f"{i}. {msg}")
         
-        # Only keep the text column for processing
         df_processed = df[[message_column]].copy()
-        # Ensure df_processed is a DataFrame
         if not isinstance(df_processed, pd.DataFrame):
             df_processed = pd.DataFrame(df_processed)
+        
+        # --- CORRECTED INDENTATION STARTS HERE ---
+
+        # Optional Error Analysis Section
+        st.subheader("⚙️ Optional Error Analysis")
+        if st.checkbox("📊 Show Error Distribution Analysis", help="Check this box to analyze the 'ErrorName' column if it exists."):
+            df_for_analysis = df.copy()
+            df_for_analysis.columns = [col.strip().lower().replace(' ', '') for col in df_for_analysis.columns]
+
+            if 'errorname' in df_for_analysis.columns:
+                error_series = df_for_analysis['errorname'].dropna()
+                error_series = error_series[error_series.str.strip() != 'No Error (code 0 )']
+                error_series = error_series[error_series.str.strip() != '']
+
+                total_rows = len(df_for_analysis)
+                error_count = len(error_series)
+
+                if error_count > 0:
+                    st.info(f"Found {error_count} messages with errors (out of {total_rows} total rows).")
+                    error_counts_df = error_series.value_counts().reset_index()
+                    error_counts_df.columns = ['ErrorName', 'Count']
+                    error_counts_df['Percentage'] = (error_counts_df['Count'] / total_rows * 100).round(2)
+
+                    st.subheader('Error Distribution Table')
+                    st.dataframe(error_counts_df, use_container_width=True)
+
+                    st.subheader('Error Distribution Bar Chart')
+                    fig_error = px.bar(
+                        error_counts_df, x='ErrorName', y='Count', text='Count',
+                        title='Distribution of Error Types',
+                        labels={'ErrorName': 'Error Name', 'Count': 'Count'}
+                    )
+                    fig_error.update_traces(texttemplate='%{text}', textposition='outside')
+                    fig_error.update_layout(xaxis_tickangle=-45)
+                    st.plotly_chart(fig_error, use_container_width=True)
+                else:
+                    st.success("✅ No errors found in the 'ErrorName' column.")
+            else:
+                st.warning("⚠️ No 'ErrorName' column found to analyze.")
         
         # Categorization section
         st.subheader('🔄 SMS Categorization')
         
         if st.button('🚀 Start Categorization', type="primary"):
             try:
-                # Initialize categorizer
                 categorizer = SMSCategorizer()
                 
-                # Progress tracking
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
-                # Categorize messages with progress tracking
                 status_text.text('Initializing categorizer...')
                 progress_bar.progress(10)
                 
                 status_text.text('Processing messages...')
                 
-                # Process in batches for better progress tracking
                 batch_size = max(1, len(df_processed) // 10)
                 categories = []
                 
                 for i in range(0, len(df_processed), batch_size):
                     batch = df_processed[message_column].iloc[i:i+batch_size]
-                    # Ensure batch is a Series
                     if not isinstance(batch, pd.Series):
                         batch = pd.Series(batch)
                     batch_categories = batch.apply(
@@ -180,13 +211,11 @@ if uploaded_file is not None:
                     ).tolist()
                     categories.extend(batch_categories)
                     
-                    # Update progress
                     progress = min(90, 20 + (i / len(df_processed)) * 70)
                     progress_bar.progress(int(progress))
                     status_text.text(f'Processed {min(i + batch_size, len(df_processed))}/{len(df_processed)} messages...')
                 
                 df_processed['predicted_category'] = categories
-                # Ensure df_processed is a DataFrame
                 if not isinstance(df_processed, pd.DataFrame):
                     df_processed = pd.DataFrame(df_processed)
                 
@@ -195,10 +224,8 @@ if uploaded_file is not None:
                 
                 st.success(f'🎉 Successfully categorized {len(df_processed)} messages!')
                 
-                # Results section
                 st.subheader('📊 Results')
                 
-                # Metrics overview
                 category_counts = df_processed['predicted_category'].value_counts()
                 unique_categories = int(len(category_counts))
                 most_common_category = str(category_counts.index[0]) if unique_categories > 0 else "N/A"
@@ -214,28 +241,23 @@ if uploaded_file is not None:
                 with col4:
                     st.metric("Messages in Top Category", most_common_count)
                 
-                # Detailed results table
                 with st.expander("📋 Detailed Results", expanded=False):
                     st.dataframe(
                         df_processed[[message_column, 'predicted_category']], 
                         use_container_width=True
                     )
                 
-                # Summary table
                 st.subheader('📈 Category Distribution')
                 category_counts_df = category_counts.reset_index()
                 category_counts_df.columns = ['Category', 'Count']
                 category_counts_df['Percentage'] = (category_counts_df['Count'] / len(df_processed) * 100).round(2)
-                # Ensure category_counts_df is a DataFrame
                 if not isinstance(category_counts_df, pd.DataFrame):
                     category_counts_df = pd.DataFrame(category_counts_df)
                 
                 st.dataframe(category_counts_df, use_container_width=True)
                 
-                # Visualizations
                 st.subheader('📊 Visualizations')
                 
-                # Create tabs for different charts
                 tab1, tab2, tab3 = st.tabs(["🥧 Pie Chart", "📊 Bar Chart", "📈 Horizontal Bar"])
                 
                 with tab1:
@@ -280,22 +302,18 @@ if uploaded_file is not None:
                     fig_hbar.update_layout(showlegend=False)
                     st.plotly_chart(fig_hbar, use_container_width=True)
                 
-                # Download section
                 st.subheader('💾 Download Results')
                 
-                # Prepare download data
                 download_df = df_processed[[message_column, 'predicted_category']].copy()
                 if not isinstance(download_df, pd.DataFrame):
                     download_df = pd.DataFrame(download_df)
                 download_df.columns = ['Message', 'Predicted_Category']
                 
-                # Add timestamp
                 download_df['Processing_Timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    # CSV download
                     csv = download_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label='📥 Download as CSV',
@@ -305,9 +323,8 @@ if uploaded_file is not None:
                     )
                 
                 with col2:
-                    # Excel download
                     buffer = io.BytesIO()
-                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:  # type: ignore
+                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                         download_df.to_excel(writer, sheet_name='Categorized_SMS', index=False)
                         category_counts_df.to_excel(writer, sheet_name='Category_Summary', index=False)
                     buffer.seek(0)
@@ -323,11 +340,10 @@ if uploaded_file is not None:
                 st.info('Please check that your SMSCategorizer class is properly implemented and accessible.')
     
     except Exception as e:
-        st.error(f'❌ Error reading file: {str(e)}')
+        st.error(f'❌ Error reading or processing file: {str(e)}')
         st.info('Please ensure your file is properly formatted and not corrupted.')
 
 else:
-    # Show sample data format when no file is uploaded
     st.info('👆 Please upload a file to get started')
     
     with st.expander("📋 Expected File Format", expanded=False):
@@ -349,9 +365,7 @@ else:
         "Your order has been confirmed",System
         ```
         """)
-        
-        # Sample data
-        
+
 # Footer
 st.markdown("---")
 st.markdown("""
