@@ -168,15 +168,7 @@ if uploaded_file is not None:
                     st.subheader('Error Distribution Table')
                     st.dataframe(error_counts_df, use_container_width=True)
 
-                    st.subheader('Error Distribution Bar Chart')
-                    fig_error = px.bar(
-                        error_counts_df, x='ErrorName', y='Count', text='Count',
-                        title='Distribution of Error Types',
-                        labels={'ErrorName': 'Error Name', 'Count': 'Count'}
-                    )
-                    fig_error.update_traces(texttemplate='%{text}', textposition='outside')
-                    fig_error.update_layout(xaxis_tickangle=-45)
-                    st.plotly_chart(fig_error, use_container_width=True)
+                
                 else:
                     st.success("✅ No errors found in the 'ErrorName' column.")
             else:
